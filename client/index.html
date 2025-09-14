@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Stress Measurement Application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <div class="brand">Project Oizyx</div>
+    </div>
+    
+    <div class="timer" id="timer">7:00</div>
+    <div class="phase-indicator" id="phaseIndicator">Ready</div>
+    
+    <div class="container" id="welcomeScreen">
+        <div class="welcome-content">
+            <h1 class="title">Cognitive Activity & Ability (IQ) Measurement Test</h1>
+            <h2 class="subtitle">A simple 12-minute evaluation protocol for measuring genetic intelligence levels in participants</h2>
+        </div>
+        <button class="start-btn" onclick="startTest()">Start Test</button>
+    </div>
+    
+    <div class="container calm-phase" id="calmPhase">
+        <div class="calm-content">
+            <h2 class="phase-title">Calibration/Calm Phase</h2>
+            <p class="phase-description">Establishing baseline cognitive state</p>
+            <p class="phase-instructions">
+                Relax and breathe naturally. This 5-minute phase allows us to measure your base brain patterns.
+                Just stay calm and happy right now. :) 
+            </p>
+        </div>
+    </div>
+    
+    <div class="container moderate-phase" id="moderatePhase">
+        <div class="moderate-content">
+            <h2 class="phase-title">Transition/Bridge Phase</h2>
+            <p class="phase-description">Basic Arithematic Questions</p>
+            <p class="phase-instructions"></p>
+<div class="math-container">
+    <div class="math-problem" id="mathProblem">7 + 3 = ?</div>
+    
+    <!-- Answer display instead of input -->
+    <div id="answerDisplay" class="answer-display"> </div>
+    
+    <!-- Number pad -->
+    <div class="numberpad">
+        <button onclick="appendNumber(1)">1</button>
+        <button onclick="appendNumber(2)">2</button>
+        <button onclick="appendNumber(3)">3</button>
+        <button onclick="appendNumber(4)">4</button>
+        <button onclick="appendNumber(5)">5</button>
+        <button onclick="appendNumber(6)">6</button>
+        <button onclick="appendNumber(7)">7</button>
+        <button onclick="appendNumber(8)">8</button>
+        <button onclick="appendNumber(9)">9</button>
+        <button onclick="clearAnswer()">Clear</button>
+        <button onclick="appendNumber(0)">0</button>
+        <button onclick="checkAnswer()">Submit</button>
+        
+    </div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    </div>
+    </div>
+
+    <div class="container high-phase" id="highPhase">
+        <div class="high-content">
+            <h2 class="phase-title">Challenge/Test Phase</h2>
+            <p class="phase-description">slightly difficult arithematic questions</p>
+            <p class="phase-instructions"></p>
+        <div class="math-container">
+    <div class="math-problem" id="mathProblem2">42</div>
+    
+    <!-- Answer display instead of input -->
+    <div id="answerDisplay2" class="answer-display"> </div>
+    
+        <!-- Number pad -->
+        <div class="numberpad">
+            <button onclick="appendNumber2(7)">7</button>
+            <button onclick="appendNumber2(2)">2</button>
+            <button onclick="appendNumber2(9)">9</button>
+            <button onclick="appendNumber2(4)">4</button>
+            <button onclick="appendNumber2(1)">1</button>
+            <button onclick="appendNumber2(6)">6</button>
+            <button onclick="appendNumber2(8)">8</button>
+            <button onclick="appendNumber2(3)">3</button>
+            <button onclick="appendNumber2(5)">5</button>
+            <button onclick="clearAnswer2()">Clear</button>
+            <button onclick="checkAnswer2()">Submit</button>
+            <button onclick="appendNumber2(0)">0</button>
+        </div>
+        
+
+
+    <div class="feedback" id="feedback"></div>
+</div>
+        </div>
+    </div>
+    
+
+
+    <div class="progress-indicator" id="progressIndicator">Phase ? of 3</div>
+
+    <!-- Music Widget -->
+    <div class="music-widget" id="musicWidget">
+        <div class="music-widget-header">
+            <div class="music-title">Now Playing</div>
+        </div>
+        <div class="song-info">
+            <div class="song-name" id="songName">Peaceful Morning</div>
+            <div class="song-artist" id="songArtist">Lo-Fi Collective</div>
+        </div>
+        <div class="music-controls">
+            <button class="music-btn" id="playPauseBtn" onclick="toggleMusic()">Play</button>
+            <button class="music-btn" id="nextBtn" onclick="nextSong()">Next</button>
+        </div>
+    </div>
+
+    <button onClick="window.location='https://www.google.com/search?q=https%3A%2F%2Fyoutu.be%2FZ21Xslddz3Y#fpstate=ive&vld=cid:1e39583a,vid:Z21Xslddz3Y,st:0'">PMR</button>
+    <button onClick="window.location='https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DoN8xV3Kb5-Q%26feature%3Dyoutu.be#fpstate=ive&vld=cid:5c99179c,vid:oN8xV3Kb5-Q,st:0'">BMR</button>
+<button onClick="startModeratePhase()">Skip to mod Phase</button>
+    <button onClick="startHighPhase()">Skip to High Phase</button>
+    
+    <script>
+        let totalTimeLeft = 8 * 60; 
+        let currentPhase = 'welcome';
+        let moderatePhaseTime = 7 * 60; // When moderate phase starts (5 minutes left eg.)
+        let highPhaseTime = 5 * 60;  // when high phase starts
+        let timerInterval;
+        
+        // Math problems for moderate phase
+        const mathProblems = [
+            {question: "15 + 27", answer: 42},
+            {question: "45 - 19", answer: 26},
+            {question: "12 x 8", answer: 96},
+            {question: "144 ÷ 12", answer: 12},
+            {question: "Square of 13", answer: 169},
+            {question: "Cube of 3", answer: 27},
+            {question: "Half of 250", answer: 125},
+            {question: "One third of  ninety", answer: 30},
+            {question: "200 ÷ 25", answer: 8},
+            {question: "12 x 11", answer: 132},
+            {question: "15 + 28 - 9", answer: 34},
+            {question: "50% of 120", answer: 60},
+            {question: "25% of 200", answer: 50},
+            {question: "3² + 4²", answer: 25},
+            {question: "7 x (5 + 2)", answer: 49},
+            {question: "100 - (3 x 12)", answer: 64},
+            {question: "Double of 47", answer: 94},
+            {question: "Triple of 21", answer: 63},
+            {question: "If a dozen apples cost 60, how much does 1 apple cost?", answer: 5},
+            {question: "If a book costs 120 and you buy 3, how much do you pay?", answer: 360},
+            {question: "Next prime number after 11", answer: 13},
+            {question: "Square root of 225", answer: 15},
+            {question: "How many minutes in 3 hours?", answer: 180},
+            {question: "How many seconds in 5 minutes?", answer: 300},
+            {question: "If you have 3 tens and 4 fives, whats the total?", answer: 50},
+            {question: "40 ÷ 0.5", answer: 80},
+            {question: "10% of 450", answer: 45},
+            {question: "2 × 2 × 2 × 2 × 2", answer: 32},
+            {question: "Sum of angles in a triangle (in degrees)", answer: 180},
+            {question: "If you spend 75 out of 200, how much is left?", answer: 125}
+        ];
+
+        
+        let currentProblemIndex = 0;
+        let correctAnswers = 0;
+
+        // Music functionality
+        let isPlaying = false;
+        let currentSongIndex = 0;
+        let audioElement = null;
+        
+        // Sample lo-fi playlist (you'll need to replace these with actual file paths)
+        const playlist = [
+            {name: "Vibin", artist: "Chosic", file: "musiclist/Vibin-chosic.com_.mp3"},
+            {name: "Tokyo Music Walker", artist: "Chosic", file: "musiclist/tokyo-music-walker-day-off-chosic.com_.mp3"},
+            {name: "Storm Clouds", artist: "Purrple Cat", file: "musiclist/storm-clouds-purpple-cat(chosic.com).mp3"},
+            {name: "Ghostrifter", artist: "Purple Dream", file: "musiclist/Ghostrifter-Official-Purple-Dream(chosic.com).mp3"},
+        ];
+        
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimer() {
+            document.getElementById('timer').textContent = formatTime(totalTimeLeft);
+            
+            if (totalTimeLeft <= 0) {
+                clearInterval(timerInterval);
+                stopMusic();
+                return;
+            }
+            
+            // Phase transitions
+            if (currentPhase === 'calm' && totalTimeLeft <= (moderatePhaseTime)) {
+                startModeratePhase();
+            }
+            
+            if (currentPhase === 'moderate' && totalTimeLeft <= (highPhaseTime)) {
+                startHighPhase();
+            }
+
+            totalTimeLeft--;
+        }
+        
+        function startTest() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('calmPhase').style.display = 'flex';
+            document.getElementById('phaseIndicator').textContent = 'Calm Phase';
+            document.getElementById('progressIndicator').textContent = 'Phase 1 of 3 • Calibration';
+            document.getElementById('musicWidget').classList.add('show');
+            document.body.style.background = '#F1E9DA';
+            currentPhase = 'calm';
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // Initialize music
+            initializeMusic();
+            toggleMusic();
+
+        }
+        
+        function startModeratePhase() {
+            stopMusic();
+
+            document.getElementById('calmPhase').style.display = 'none';
+            document.getElementById('moderatePhase').style.display = 'flex';
+            document.getElementById('phaseIndicator').textContent = 'Transition Phase';
+            document.getElementById('progressIndicator').textContent = 'Phase 2 of 3 • Transition';
+            document.getElementById('musicWidget').classList.remove('show');
+            document.getElementById('timer').style.borderColor = '#FF0000';
+            document.getElementById('timer').style.background = 'rgba(255, 0, 0, 0.3)';
+            document.getElementById('timer').style.color = 'rgba(255, 0, 0, 1)';
+            document.getElementById('timer').style.fontSize = '2.5rem';
+
+
+            currentPhase = 'moderate';
+            showNextProblem();
+        }
+        function startHighPhase() {
+            stopMusic();
+            document.getElementById('calmPhase').style.display = 'none';
+            document.getElementById('moderatePhase').style.display = 'none';
+            document.getElementById('highPhase').style.display = 'flex';
+            document.getElementById('phaseIndicator').textContent = 'Challenge Phase';
+            document.getElementById('progressIndicator').textContent = 'Phase 3 of 3 • Challenge';
+            document.getElementById('musicWidget').classList.remove('show');
+            document.getElementById('timer').style.borderColor = '#000000';
+            document.getElementById('timer').style.background = 'rgba(0, 0, 0, 0.3)';
+            document.getElementById('timer').style.color = 'rgba(0, 0, 0, 1)';
+            document.getElementById('timer').style.fontSize = '4rem';
+            document.body.style.backgroundColor='red';
+            document.body.style.color='blue';
+
+
+            currentPhase = 'high';
+            showNextProblem();
+        }
+
+
+        
+        function showNextProblem() {
+            if (currentProblemIndex < mathProblems.length) {
+                const problem = mathProblems[currentProblemIndex];
+                document.getElementById('mathProblem').textContent = `${problem.question} = ?`;
+                document.getElementById('mathInput').value = '';
+                document.getElementById('feedback').textContent = '';
+                document.getElementById('mathInput').focus();
+            }
+        }
+        
+function appendNumber(num) {
+    const display = document.getElementById('answerDisplay');
+    display.textContent += num;
+}
+function appendNumber2(num) {
+    const display = document.getElementById('answerDisplay2');
+    display.textContent += num;
+}
+
+function clearAnswer() {
+    document.getElementById('answerDisplay').textContent = '';
+}
+function clearAnswer2() {
+    document.getElementById('answerDisplay2').textContent = '';
+}
+
+function checkAnswer() {
+    const userAnswer = parseInt(document.getElementById('answerDisplay').textContent);
+    const correctAnswer = mathProblems[currentProblemIndex].answer;
+    const feedback = document.getElementById('feedback');
+    
+    if (userAnswer === correctAnswer) {
+        feedback.textContent = 'Correct';
+        feedback.className = 'feedback correct';
+        correctAnswers++;
+        
+        setTimeout(() => {
+            currentProblemIndex++;
+            if (currentProblemIndex < mathProblems.length && totalTimeLeft > 0) {
+                showNextProblem();
+            }
+        }, 1000);
+    } else {
+        feedback.textContent = 'Incorrect. Try again.';
+        feedback.className = 'feedback incorrect';
+    }
+}
+function checkAnswer2() {
+    const userAnswer = parseInt(document.getElementById('answerDisplay2').textContent);
+    const correctAnswer = mathProblems[currentProblemIndex].answer;
+    const feedback = document.getElementById('feedback');
+    console.log(correctAnswer);
+    if (userAnswer === correctAnswer) {
+
+        feedback.textContent = 'Correct';
+        feedback.className = 'feedback correct';
+        correctAnswers++;
+        
+        setTimeout(() => {
+            currentProblemIndex++;
+            if (currentProblemIndex < mathProblems.length && totalTimeLeft > 0) {
+                showNextProblem2();
+            }
+        }, 1000);
+    } else {
+        feedback.textContent = 'Incorrect. Try again.';
+        feedback.className = 'feedback incorrect';
+    }
+}
+
+    function showNextProblem() {
+    if (currentProblemIndex < mathProblems.length) {
+        const problem = mathProblems[currentProblemIndex];
+        document.getElementById('mathProblem').textContent = `${problem.question} = ?`;
+        document.getElementById('answerDisplay').textContent = '';
+        document.getElementById('answerDisplay2').textContent = '';
+        document.getElementById('feedback').textContent = '';
+    }
+}
+
+    function showNextProblem2() {
+    if (currentProblemIndex < mathProblems.length) {
+        const problem = mathProblems[currentProblemIndex];
+        document.getElementById('mathProblem2').textContent = `${problem.question} = ?`;
+        document.getElementById('answerDisplay').textContent = '';
+        document.getElementById('answerDisplay2').textContent = '';
+        document.getElementById('feedback').textContent = '';
+    }}
+        
+        function updateSongDisplay() {
+            const currentSong = playlist[currentSongIndex];
+            document.getElementById('songName').textContent = currentSong.name;
+            document.getElementById('songArtist').textContent = currentSong.artist;
+        }
+        
+        function toggleMusic() {
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            
+            if (!isPlaying) {
+                playMusic();
+                playPauseBtn.textContent = 'Pause';
+                playPauseBtn.classList.add('playing');
+            } else {
+                pauseMusic();
+                playPauseBtn.textContent = 'Play';
+                playPauseBtn.classList.remove('playing');
+            }
+        }
+        
+        function playMusic() {
+            isPlaying = true;
+            
+            if (audioElement) {
+                audioElement.pause();
+            }
+            
+            const currentSong = playlist[currentSongIndex];
+            audioElement = new Audio(`${currentSong.file}`);
+            audioElement.play();
+            
+            audioElement.addEventListener('ended', () => {
+                nextSong();
+            });
+        }
+        
+        function pauseMusic() {
+            isPlaying = false;
+            
+            if (audioElement) {
+                audioElement.pause();
+            }
+        }
+        
+        function stopMusic() {
+            if (!audioElement) return;
+
+            const fadeOutDuration = 5000; // 2 seconds
+            const fadeSteps = 20; // number of steps for smoother fade
+            const stepTime = fadeOutDuration / fadeSteps;
+            let currentStep = 0;
+
+            const initialVolume = audioElement.volume;
+            const volumeStep = initialVolume / fadeSteps;
+
+            const fadeOutInterval = setInterval(() => {
+                if (currentStep < fadeSteps) {
+                    audioElement.volume = Math.max(0, initialVolume - volumeStep * currentStep);
+                    currentStep++;
+                } else {
+                    clearInterval(fadeOutInterval);
+                    audioElement.pause();
+                    audioElement.currentTime = 0;
+                    audioElement.volume = initialVolume; // reset for next play
+                    isPlaying = false;
+
+                    const playPauseBtn = document.getElementById('playPauseBtn');
+                    playPauseBtn.textContent = 'Play';
+                    playPauseBtn.classList.remove('playing');
+                }
+            }, stepTime);
+        }
+
+                
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % playlist.length;
+            updateSongDisplay();
+            
+            if (isPlaying) {
+                playMusic();
+            }
+        }
+        
+        // Allow Enter key to submit answers
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+    </script>
+</body>
+</html>
