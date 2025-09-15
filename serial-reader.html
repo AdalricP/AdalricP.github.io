@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Port Reader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .console {
+            background-color: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 20px;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Serial Port Reader</h1>
+        
+        <div class="info">
+            <strong>Note:</strong> This page uses the Web Serial API to read data from serial ports. 
+            It requires a modern browser (Chrome, Edge, or Opera) and HTTPS connection (or localhost).
+            Make sure your device is connected and the correct port is selected.
+        </div>
+
+        <div class="controls">
+            <button id="connectBtn" onclick="connectToSerial()">Connect to Serial Port</button>
+            <button id="disconnectBtn" onclick="disconnectFromSerial()" disabled>Disconnect</button>
+            <button id="clearBtn" onclick="clearConsole()">Clear Console</button>
+        </div>
+
+        <div id="status" class="status disconnected">
+            Not connected to any serial port
+        </div>
+
+        <div id="console" class="console">
+            Serial data will appear here...
+        </div>
+    </div>
+
+    <script>
+        let port = null;
+        let reader = null;
+        let isConnected = false;
+
+        async function connectToSerial() {
+            try {
+                // Request access to serial ports
+                port = await navigator.serial.requestPort();
+                
+                // Open the port with default settings
+                await port.open({ 
+                    baudRate: 9600,
+                    dataBits: 8,
+                    stopBits: 1,
+                    parity: 'none',
+                    flowControl: 'none'
+                });
+
+                isConnected = true;
+                updateUI();
+                updateStatus('Connected to serial port', 'connected');
+                
+                // Start reading data
+                readSerialData();
+                
+            } catch (error) {
+                console.error('Error connecting to serial port:', error);
+                updateStatus('Error connecting: ' + error.message, 'disconnected');
+            }
+        }
+
+        async function readSerialData() {
+            try {
+                reader = port.readable.getReader();
+                
+                while (isConnected) {
+                    const { value, done } = await reader.read();
+                    
+                    if (done) {
+                        break;
+                    }
+                    
+                    // Convert the received data to text
+                    const text = new TextDecoder().decode(value);
+                    
+                    // Log to console
+                    console.log('Serial data received:', text);
+                    
+                    // Display in the web console
+                    displaySerialData(text);
+                }
+            } catch (error) {
+                console.error('Error reading serial data:', error);
+                updateStatus('Error reading data: ' + error.message, 'disconnected');
+            }
+        }
+
+        function displaySerialData(data) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.textContent += `[${timestamp}] ${data}`;
+            
+            // Auto-scroll to bottom
+            console.scrollTop = console.scrollHeight;
+        }
+
+        async function disconnectFromSerial() {
+            try {
+                isConnected = false;
+                
+                if (reader) {
+                    await reader.cancel();
+                    reader = null;
+                }
+                
+                if (port) {
+                    await port.close();
+                    port = null;
+                }
+                
+                updateUI();
+                updateStatus('Disconnected from serial port', 'disconnected');
+                
+            } catch (error) {
+                console.error('Error disconnecting:', error);
+                updateStatus('Error disconnecting: ' + error.message, 'disconnected');
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById('console').textContent = 'Console cleared...\n';
+        }
+
+        function updateUI() {
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            connectBtn.disabled = isConnected;
+            disconnectBtn.disabled = !isConnected;
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        // Check if Web Serial API is supported
+        if (!('serial' in navigator)) {
+            updateStatus('Web Serial API is not supported in this browser. Please use Chrome, Edge, or Opera.', 'disconnected');
+            document.getElementById('connectBtn').disabled = true;
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (isConnected) {
+                disconnectFromSerial();
+            }
+        });
+    </script>
+</body>
+</html>
