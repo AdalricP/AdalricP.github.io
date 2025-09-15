@@ -127,8 +127,21 @@
         </div>
     </div>
 
-    <button onClick="window.location='https://www.google.com/search?q=https%3A%2F%2Fyoutu.be%2FZ21Xslddz3Y#fpstate=ive&vld=cid:1e39583a,vid:Z21Xslddz3Y,st:0'">PMR</button>
-    <button onClick="window.location='https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DoN8xV3Kb5-Q%26feature%3Dyoutu.be#fpstate=ive&vld=cid:5c99179c,vid:oN8xV3Kb5-Q,st:0'">BMR</button>
+    <button onClick="openYouTubeVideo('PMR')">PMR</button>
+    <button onClick="openYouTubeVideo('BMR')">BMR</button>
+    
+    <!-- WebSocket Status and Controls -->
+    <div style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
+        <h3>WebSocket Status</h3>
+        <div id="wsStatus" style="margin: 10px 0; font-weight: bold; color: red;">Disconnected</div>
+        <button onClick="connectWebSocket()">Reconnect WebSocket</button>
+        <button onClick="testWebSocketMessage()">Test YouTube Trigger</button>
+        <div style="margin-top: 10px;">
+            <label for="wsUrlInput">WebSocket URL:</label>
+            <input type="text" id="wsUrlInput" value="ws://localhost:8080" style="margin-left: 10px; width: 200px;">
+            <button onClick="updateWebSocketUrl()">Update URL</button>
+        </div>
+    </div>
 <button onClick="startModeratePhase()">Skip to mod Phase</button>
     <button onClick="startHighPhase()">Skip to High Phase</button>
     
@@ -138,6 +151,129 @@
         let moderatePhaseTime = 7 * 60; // When moderate phase starts (5 minutes left eg.)
         let highPhaseTime = 5 * 60;  // when high phase starts
         let timerInterval;
+        
+        // WebSocket functionality
+        let ws = null;
+        let wsUrl = 'ws://localhost:8080'; // Default WebSocket server URL
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 3000; // 3 seconds
+        
+        // Function to open YouTube videos (extracted from button functionality)
+        function openYouTubeVideo(type = 'PMR') {
+            console.log(`Opening YouTube video: ${type}`);
+            if (type === 'PMR') {
+                window.location = 'https://www.google.com/search?q=https%3A%2F%2Fyoutu.be%2FZ21Xslddz3Y#fpstate=ive&vld=cid:1e39583a,vid:Z21Xslddz3Y,st:0';
+            } else if (type === 'BMR') {
+                window.location = 'https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DoN8xV3Kb5-Q%26feature%3Dyoutu.be#fpstate=ive&vld=cid:5c99179c,vid:oN8xV3Kb5-Q,st:0';
+            }
+        }
+        
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            updateWebSocketStatus('Connecting...');
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = function(event) {
+                    console.log('WebSocket connected to:', wsUrl);
+                    updateWebSocketStatus('Connected');
+                    reconnectAttempts = 0;
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('Received WebSocket message:', data);
+                        
+                        if (data.type === 'run_function') {
+                            console.log('Function has been triggered by BetaAlphaMonitor!');
+                            // Call the YouTube video opening function
+                            openYouTubeVideo(data.videoType || 'PMR');
+                        }
+                    } catch (err) {
+                        console.error('Invalid WebSocket message:', event.data, err);
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    console.log('WebSocket disconnected');
+                    updateWebSocketStatus('Disconnected');
+                    ws = null;
+                    
+                    // Attempt to reconnect
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        updateWebSocketStatus(`Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`);
+                        console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
+                        setTimeout(connectWebSocket, reconnectDelay);
+                    } else {
+                        console.log('Max reconnection attempts reached. WebSocket connection failed.');
+                        updateWebSocketStatus('Connection Failed');
+                    }
+                };
+                
+                ws.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateWebSocketStatus('Error');
+                };
+                
+            } catch (error) {
+                console.error('Failed to create WebSocket connection:', error);
+                updateWebSocketStatus('Connection Failed');
+            }
+        }
+        
+        // Function to manually set WebSocket URL (for testing/configuration)
+        function setWebSocketUrl(url) {
+            wsUrl = url;
+            if (ws) {
+                ws.close();
+            }
+            connectWebSocket();
+        }
+        
+        // Function to update WebSocket status display
+        function updateWebSocketStatus(status) {
+            const statusElement = document.getElementById('wsStatus');
+            if (statusElement) {
+                statusElement.textContent = status;
+                if (status === 'Connected') {
+                    statusElement.style.color = 'green';
+                } else if (status === 'Connecting...') {
+                    statusElement.style.color = 'orange';
+                } else {
+                    statusElement.style.color = 'red';
+                }
+            }
+        }
+        
+        // Function to update WebSocket URL from input field
+        function updateWebSocketUrl() {
+            const urlInput = document.getElementById('wsUrlInput');
+            if (urlInput) {
+                setWebSocketUrl(urlInput.value);
+            }
+        }
+        
+        // Function to test WebSocket message handling
+        function testWebSocketMessage() {
+            console.log('Testing WebSocket message handling...');
+            // Simulate receiving a WebSocket message
+            const testMessage = {
+                type: 'run_function',
+                videoType: 'PMR'
+            };
+            
+            console.log('Function has been triggered by BetaAlphaMonitor!');
+            openYouTubeVideo(testMessage.videoType || 'PMR');
+        }
+        
+        // Initialize WebSocket on page load
+        window.addEventListener('load', function() {
+            connectWebSocket();
+        });
         
         // Math problems for moderate phase
         const mathProblems = [
