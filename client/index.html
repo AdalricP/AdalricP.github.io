@@ -71,8 +71,15 @@
             <h2 class="phase-title">Challenge/Test Phase</h2>
             <p class="phase-description">slightly difficult arithematic questions</p>
             <p class="phase-instructions"></p>
+            <div style="display: flex; gap: 10px;">
+  <div id="uglyTimer">20</div>
+  <div id="problemTimer" style="border: 2px solid gray; color: #aaa; background: #eee; padding: 2px; font-size: 12px;">
+    20
+  </div>
+</div>
         <div class="math-container">
     <div class="math-problem" id="mathProblem2">42</div>
+
     
     <!-- Answer display instead of input -->
     <div id="answerDisplay2" class="answer-display"> </div>
@@ -89,14 +96,15 @@
             <button onclick="appendNumber2(3)">3</button>
             <button onclick="appendNumber2(5)">5</button>
             <button onclick="clearAnswer2()">Clear</button>
-            <button onclick="checkAnswer2()">Submit</button>
+            <button onclick="checkAnswer2()" id="floatingSubmit">Submit</button>
             <button onclick="appendNumber2(0)">0</button>
         </div>
         
 
 
-    <div class="feedback" id="feedback"></div>
+    
 </div>
+<div class="feedback" id="feedback"></div>
         </div>
     </div>
     
@@ -165,6 +173,41 @@
             {question: "If you spend 75 out of 200, how much is left?", answer: 125}
         ];
 
+        // Math problems for very high phase (much harder, integer-only)
+        const mathProblems2 = [
+            {question: "987 + 654 - 321", answer: 1320},
+            {question: "1250 - (275 + 375)", answer: 600},
+            {question: "48 × 37", answer: 1776},
+            {question: "2025 ÷ 45", answer: 45},
+            {question: "Square of 47", answer: 2209},
+            {question: "Cube of 12", answer: 1728},
+            {question: "Half of 3,678", answer: 1839},
+            {question: "One fifth of 3,445", answer: 689},
+            {question: "144 × (25 - 19)", answer: 864},
+            {question: "(125 ÷ 25) × 72", answer: 360},
+            {question: "350 + 240 - (75 × 3)", answer: 365},
+            {question: "60% of 840", answer: 504},
+            {question: "35% of 1,200", answer: 420},
+            {question: "25² + 20²", answer: 1025},
+            {question: "18 × (15 + 12)", answer: 486},
+            {question: "1,500 - (24 × 38)", answer: 588},
+            {question: "Double of 1,246", answer: 2492},
+            {question: "Triple of 785", answer: 2355},
+            {question: "If 36 pencils cost 1,152, how much does 1 pencil cost?", answer: 32},
+            {question: "If a chair costs 875 and you buy 16, how much do you pay?", answer: 14000},
+            {question: "Next prime number after 97", answer: 101},
+            {question: "Square root of 4,761", answer: 69},
+            {question: "How many minutes in 2 days?", answer: 2880},
+            {question: "How many seconds in 1 hour?", answer: 3600},
+            {question: "If you have 12 twenties and 25 tens, what's the total?", answer: 470},
+            {question: "960 ÷ 0.5", answer: 1920},
+            {question: "22% of 3,600", answer: 792},
+            {question: "5 × 5 × 5 × 5 × 5", answer: 3125},
+            {question: "Sum of angles in a decagon (10 sides)", answer: 1440},
+            {question: "If you spend 3,275 out of 5,600, how much is left?", answer: 2325}
+        ];
+
+
         
         let currentProblemIndex = 0;
         let correctAnswers = 0;
@@ -220,7 +263,6 @@
             timerInterval = setInterval(updateTimer, 1000);
             
             // Initialize music
-            initializeMusic();
             toggleMusic();
 
         }
@@ -243,7 +285,9 @@
             showNextProblem();
         }
         function startHighPhase() {
+            currentProblemIndex = 0; // reset for high phase
             stopMusic();
+
             document.getElementById('calmPhase').style.display = 'none';
             document.getElementById('moderatePhase').style.display = 'none';
             document.getElementById('highPhase').style.display = 'flex';
@@ -254,24 +298,39 @@
             document.getElementById('timer').style.background = 'rgba(0, 0, 0, 0.3)';
             document.getElementById('timer').style.color = 'rgba(0, 0, 0, 1)';
             document.getElementById('timer').style.fontSize = '4rem';
+            document.getElementById('feedback').style.color ='pink'
             document.body.style.backgroundColor='red';
             document.body.style.color='blue';
 
+            const btn = document.getElementById("floatingSubmit");
+            btn.style.position = "fixed";
+            btn.style.left = "100px";
+            btn.style.top = "100px";
+
+            let x = 100, y = 100;
+            let dx = 2, dy = 2;
+            const speed = 10; // lower = faster
+
+            function float() {
+                const width = window.innerWidth - btn.offsetWidth;
+                const height = window.innerHeight - btn.offsetHeight;
+
+                x += dx;
+                y += dy;
+
+                if (x <= 0 || x >= width) dx *= -1;
+                if (y <= 0 || y >= height) dy *= -1;
+
+                btn.style.left = x + "px";
+                btn.style.top = y + "px";
+
+                requestAnimationFrame(float);
+            }
+
+            float();
 
             currentPhase = 'high';
-            showNextProblem();
-        }
-
-
-        
-        function showNextProblem() {
-            if (currentProblemIndex < mathProblems.length) {
-                const problem = mathProblems[currentProblemIndex];
-                document.getElementById('mathProblem').textContent = `${problem.question} = ?`;
-                document.getElementById('mathInput').value = '';
-                document.getElementById('feedback').textContent = '';
-                document.getElementById('mathInput').focus();
-            }
+            showNextProblem2();
         }
         
 function appendNumber(num) {
@@ -313,8 +372,11 @@ function checkAnswer() {
 }
 function checkAnswer2() {
     const userAnswer = parseInt(document.getElementById('answerDisplay2').textContent);
-    const correctAnswer = mathProblems[currentProblemIndex].answer;
+    const correctAnswer = mathProblems2[currentProblemIndex].answer;
     const feedback = document.getElementById('feedback');
+    feedback.style.fontSize='20px';
+    feedback.style.fontWeight='900';
+    feedback.style.color='green';
     console.log(correctAnswer);
     if (userAnswer === correctAnswer) {
 
@@ -324,12 +386,12 @@ function checkAnswer2() {
         
         setTimeout(() => {
             currentProblemIndex++;
-            if (currentProblemIndex < mathProblems.length && totalTimeLeft > 0) {
+            if (currentProblemIndex < mathProblems2.length && totalTimeLeft > 0) {
                 showNextProblem2();
             }
         }, 1000);
     } else {
-        feedback.textContent = 'Incorrect. Try again.';
+        feedback.textContent = 'Incorrect. Try again stupid.';
         feedback.className = 'feedback incorrect';
     }
 }
@@ -339,19 +401,50 @@ function checkAnswer2() {
         const problem = mathProblems[currentProblemIndex];
         document.getElementById('mathProblem').textContent = `${problem.question} = ?`;
         document.getElementById('answerDisplay').textContent = '';
-        document.getElementById('answerDisplay2').textContent = '';
         document.getElementById('feedback').textContent = '';
     }
 }
 
-    function showNextProblem2() {
-    if (currentProblemIndex < mathProblems.length) {
-        const problem = mathProblems[currentProblemIndex];
-        document.getElementById('mathProblem2').textContent = `${problem.question} = ?`;
-        document.getElementById('answerDisplay').textContent = '';
-        document.getElementById('answerDisplay2').textContent = '';
-        document.getElementById('feedback').textContent = '';
-    }}
+        let countdown;
+        let uglytimerInterval;
+
+        function startUglyTimer() {
+            // Reset countdown each time
+            countdown = 20;
+            const timerDisplay = document.getElementById("uglyTimer");
+            timerDisplay.textContent = countdown;
+
+            // Clear any old timer before starting a new one
+            clearInterval(uglytimerInterval);
+
+            uglytimerInterval = setInterval(() => {
+                countdown--;
+                timerDisplay.textContent = countdown;
+
+                if (countdown <= 0) {
+                    new Audio("fail/fail.mp3").play();
+                    clearInterval(uglytimerInterval);
+                    timerDisplay.textContent = "TIME'S UP!";
+                    showNextProblem2();
+                }
+            }, 1000);
+        }
+
+        function showNextProblem2() {
+            if (currentProblemIndex < mathProblems2.length) {
+                const problem = mathProblems2[currentProblemIndex];
+                document.getElementById('mathProblem2').textContent = `${problem.question} = ?`;
+                document.getElementById('answerDisplay').textContent = '';
+                document.getElementById('answerDisplay2').textContent = '';
+                document.getElementById('feedback').textContent = '';
+
+                // Restart the ugly timer whenever a new problem shows
+                startUglyTimer();
+            } else {
+                document.getElementById('mathProblem2').textContent = "All problems done!";
+                document.getElementById('uglyTimer').textContent = "--";
+            }
+        }
         
         function updateSongDisplay() {
             const currentSong = playlist[currentSongIndex];
